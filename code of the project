@@ -1,0 +1,191 @@
+import React, { useState, useRef, useEffect } from "react";
+
+// --- Configuration & Constants ---
+const STEPS = [
+  { id: 1, icon: "📤", label: "Poster Uploaded", desc: "Image received and queued" },
+  { id: 2, icon: "🔍", label: "OCR Extraction", desc: "Reading text via Vision AI" },
+  { id: 3, icon: "🧠", label: "NLP Processing", desc: "Structuring metadata (Date/Venue)" },
+  { id: 4, icon: "🗄️", label: "Database Sync", desc: "Storing to IEEE Repository" },
+  { id: 5, icon: "⚡", label: "Conflict Check", desc: "Scanning for schedule overlaps" },
+  { id: 6, icon: "📊", label: "ML Prediction", desc: "Forecasting student turnout" },
+  { id: 7, icon: "✍️", label: "Content Gen", desc: "Writing social media copy" },
+  { id: 8, icon: "📅", label: "Live Publish", desc: "Added to Campus Calendar" },
+];
+
+const CATEGORIES = {
+  Workshop: "#8B5CF6",
+  Hackathon: "#06B6D4",
+  Tech: "#F97316",
+  Coding: "#10B981"
+};
+
+export default function App() {
+  const [page, setPage] = useState("home");
+  const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState(0);
+  const [result, setResult] = useState(null);
+  const [preview, setPreview] = useState(null);
+  const fileInput = useRef(null);
+
+  const startAnalysis = async () => {
+    setLoading(true);
+    setResult(null);
+    for (let i = 1; i <= 8; i++) {
+      setStep(i);
+      await new Promise(r => setTimeout(r, i === 2 || i === 7 ? 1200 : 600));
+    }
+    setResult({
+      title: "IEEE AI-First Software Engineering",
+      date: "April 15, 2026",
+      venue: "SRM IST Vadapalani, Tech Lab 1",
+      category: "Workshop",
+      attendance: 142,
+      conflict: "No scheduling conflicts detected for this venue.",
+      caption: "🚀 Transform how you build! Join IEEE for the AI-First SE Workshop. #IEEE #SRMIST #SoftwareEngineering",
+    });
+    setLoading(false);
+  };
+
+  const onFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setPreview(URL.createObjectURL(file));
+      startAnalysis();
+    }
+  };
+
+  return (
+    <div style={s.body}>
+      <style>{css}</style>
+      <nav style={s.nav}>
+        <div style={s.logo} onClick={() => setPage("home")}>📌 Poster<span style={{ color: "#F97316" }}>Pulse</span></div>
+        <div style={s.navLinks}>
+          <button onClick={() => setPage("demo")} style={s.navBtn}>Demo</button>
+          <button onClick={() => setPage("arch")} style={s.navBtn}>Architecture</button>
+        </div>
+      </nav>
+
+      {page === "home" && (
+        <section style={s.hero}>
+          <div className="badge">IEEE SRM IST VADAPALANI</div>
+          <h1 style={s.heroTitle}>Visual Posters to <br/><span className="gradient">Actionable Intelligence</span></h1>
+          <p style={s.heroSub}>Automated extraction, attendance prediction, and marketing content.</p>
+          <button onClick={() => setPage("demo")} style={s.cta}>Start Analysis</button>
+        </section>
+      )}
+
+      {page === "demo" && (
+        <div style={s.demoGrid}>
+          <div style={s.card}>
+            <input type="file" ref={fileInput} onChange={onFileSelect} hidden />
+            {!preview ? (
+              <div style={s.dropzone} onClick={() => fileInput.current.click()}>
+                <div style={{fontSize: 48}}>📤</div>
+                <h3>Upload Event Poster</h3>
+                <p>Supports JPEG, PNG, PDF</p>
+              </div>
+            ) : (
+              <div style={{textAlign: 'center'}}>
+                <img src={preview} style={s.previewImg} alt="Poster" />
+                {loading && (
+                  <div style={s.pipeline}>
+                    {STEPS.map(item => (
+                      <div key={item.id} style={{...s.step, opacity: step >= item.id ? 1 : 0.2, color: step === item.id ? "#F97316" : "white"}}>
+                        <span>{step > item.id ? "✅" : item.icon}</span>
+                        <div style={{textAlign: 'left', flex: 1, marginLeft: 12}}>
+                          <div style={{fontWeight: 'bold', fontSize: 13}}>{item.label}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div style={s.card}>
+            {result ? (
+              <div className="fade-in">
+                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                  <h2 style={{margin: 0}}>{result.title}</h2>
+                  <span style={{background: CATEGORIES[result.category], padding: '4px 12px', borderRadius: 8, fontSize: 12}}>{result.category}</span>
+                </div>
+                <div style={s.infoGrid}>
+                  <div style={s.infoItem}><label style={s.label}>DATE</label><div>{result.date}</div></div>
+                  <div style={s.infoItem}><label style={s.label}>VENUE</label><div>{result.venue}</div></div>
+                </div>
+                <div style={s.analytics}>
+                  <div style={s.mlBox}>
+                    <label style={s.label}>ML PREDICTION</label>
+                    <div style={{fontSize: 32, fontWeight: 'bold'}}>{result.attendance}</div>
+                  </div>
+                  <div style={s.conflictBox}>
+                    <label style={s.label}>CONFLICT RADAR</label>
+                    <div style={{fontSize: 11}}>{result.conflict}</div>
+                  </div>
+                </div>
+                <div style={s.marketing}>
+                  <label style={s.label}>AI MARKETING CONTENT</label>
+                  <p style={{fontSize: 13, color: '#bbb', fontStyle: 'italic'}}>"{result.caption}"</p>
+                </div>
+                <button style={s.publish}>Approve & Publish to IEEE Site</button>
+              </div>
+            ) : (
+              <div style={s.empty}>Pipeline output will appear here</div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {page === "arch" && (
+        <section style={{padding: '40px 10%'}}>
+            <h2 style={{textAlign: 'center', marginBottom: 40}}>System Architecture</h2>
+            {[
+                {l: "Frontend", t: "Next.js + Tailwind", c: "#F97316"},
+                {l: "AI Logic", t: "Vision AI + NLP Engine", c: "#8B5CF6"},
+                {l: "Data Layer", t: "Supabase PostgreSQL", c: "#10B981"}
+            ].map(row => (
+                <div key={row.l} style={{borderLeft: `4px solid ${row.c}`, padding: 20, background: '#111', marginBottom: 10, borderRadius: '0 12px 12px 0'}}>
+                    <h4 style={{margin: 0, color: row.c}}>{row.l}</h4>
+                    <p style={{margin: 0, fontSize: 14, color: '#888'}}>{row.t}</p>
+                </div>
+            ))}
+        </section>
+      )}
+    </div>
+  );
+}
+
+const s = {
+  body: { background: "#06060c", minHeight: "100vh", color: "white", fontFamily: "system-ui" },
+  nav: { display: "flex", justifyContent: "space-between", padding: "20px 50px", borderBottom: "1px solid #1a1a2e" },
+  logo: { fontSize: 22, fontWeight: "bold", cursor: "pointer" },
+  navLinks: { display: "flex", gap: 20 },
+  navBtn: { background: "transparent", border: "none", color: "#888", cursor: "pointer", fontWeight: "bold" },
+  hero: { textAlign: "center", padding: "100px 20px" },
+  heroTitle: { fontSize: "3.5rem", fontWeight: "900", lineHeight: 1.1, margin: "20px 0" },
+  heroSub: { color: "#888", fontSize: 18, maxWidth: 600, margin: "0 auto 40px" },
+  cta: { background: "#F97316", border: "none", padding: "16px 40px", borderRadius: 12, color: "white", fontWeight: "bold", cursor: "pointer" },
+  demoGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 30, padding: "40px 50px" },
+  card: { background: "#0f0f1a", padding: 30, borderRadius: 24, border: "1px solid #1a1a2e" },
+  dropzone: { border: "2px dashed #222", padding: 60, textAlign: "center", borderRadius: 20, cursor: "pointer" },
+  previewImg: { width: "100%", borderRadius: 12, marginBottom: 20, maxHeight: 250, objectFit: 'cover' },
+  pipeline: { background: "#05050a", padding: 15, borderRadius: 15 },
+  step: { display: "flex", alignItems: "center", marginBottom: 10 },
+  empty: { height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#333" },
+  infoGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 15, margin: "20px 0" },
+  infoItem: { background: "#161625", padding: 15, borderRadius: 12 },
+  analytics: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 15, marginBottom: 20 },
+  mlBox: { background: "rgba(6,182,212,0.1)", border: "1px solid rgba(6,182,212,0.2)", padding: 15, borderRadius: 12, color: "#06B6D4", textAlign: 'center' },
+  conflictBox: { background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)", padding: 15, borderRadius: 12, color: "#10B981" },
+  marketing: { background: "#161625", padding: 15, borderRadius: 12, marginBottom: 20 },
+  publish: { width: "100%", padding: 15, borderRadius: 12, border: "none", background: "white", fontWeight: "bold", cursor: "pointer" },
+  label: { fontSize: 10, color: '#555', fontWeight: 'bold', display: 'block', marginBottom: 5 }
+};
+
+const css = `
+  .gradient { background: linear-gradient(90deg, #F97316, #FB923C); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .badge { display: inline-block; background: rgba(249,115,22,0.1); color: #F97316; padding: 6px 15px; border-radius: 20px; font-size: 11px; font-weight: bold; }
+  .fade-in { animation: fadeIn 0.5s ease-out; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+`;
